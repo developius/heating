@@ -19,7 +19,7 @@ db.autocommit(True)
 email = credentials[4]
 password = credentials[5]
 spreadsheet_key = credentials[6] # get from url with the arg key=xxx
-worksheet_id = "" # 1st sheet
+worksheet_id = "od6" # 1st worksheet
 
 spr_client = gdata.spreadsheet.service.SpreadsheetsService()
 spr_client.email = email
