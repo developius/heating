@@ -18,6 +18,7 @@ Notes
 =====
 
 heating.py requires a file "credentials.txt" to have the following lines:
+
 Line	Item
 
 1. MySQL database hostname - e.g. "localhost"
