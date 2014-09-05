@@ -5,8 +5,8 @@ import gdata.spreadsheet.service
 from random import randint
 credentials = []
 
-for line in open("credentials.txt", r):
-	credentials.append(line)
+for line in open("credentials.txt", "r"):
+	credentials.append(line.split("\n")[0])
 
 db = MySQLdb.connect(host=credentials[0], # your host, usually localhost
                      user=credentials[1], # your username
@@ -33,7 +33,6 @@ def clear():
 	cur.execute("SELECT * FROM node_data")
 	for row in cur.fetchall():
 	        print "Node: %.0f Temperature: %.1f Threshold: %.1f" % (row[0], row[1], row[2])
-	sys.exit()
 
 def val():
 	return randint(1,10)
@@ -43,7 +42,11 @@ def enter_start_values():
 		temp = [20+val(),20+val(),20+val(),20+val(),20+val(),20+val(),20+val(),20+val(),20+val(),20+val(),20+val(),20+val(),20+val()]
 	        threshold = [16,16,16,16,16,16,16,16,16,16,16,16]
 		node = [temp[0],temp[1],temp[2],temp[3],temp[4],temp[5],temp[6],temp[7],temp[8],temp[9],temp[10],temp[11]]
-		cur.execute("INSERT INTO `heating`.`node_data` (`Node`, `Temperature`, `Threshold`) VALUES ('%.0f', '%.1f', '%.1f');" % (i, node[i], threshold[i]))
+		status = ["off"]
+		cur.execute("INSERT INTO `heating`.`node_data` (`Node`, `Temperature`, `Threshold`, `Status`) VALUES ('%.0f', '%.1f', '%.1f', '%s');" % (i, node[i], threshold[i], status[0]))
+clear()
+enter_start_values()
+sys.exit()
 
 for number in range(20):
 	temp = [20+val(),21+val(),22+val(),23+val(),24+val(),25+val(),26+val(),27+val(),28+val(),29+val(),30+val(),31+val(),32+val()]
