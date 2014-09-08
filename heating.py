@@ -39,22 +39,22 @@ def val():
 
 def enter_start_values():
 	for i in range(12):
-		temp = [20+val(),20+val(),20+val(),20+val(),20+val(),20+val(),20+val(),20+val(),20+val(),20+val(),20+val(),20+val(),20+val()]
-	        threshold = [16,16,16,16,16,16,16,16,16,16,16,16]
-		node = [temp[0],temp[1],temp[2],temp[3],temp[4],temp[5],temp[6],temp[7],temp[8],temp[9],temp[10],temp[11]]
+		temp = [20+val(),20+val(),20+val(),20+val()]
+	        threshold = [16,16,16,16]
+		node = [temp[0],temp[1],temp[2],temp[3]]
 		status = ["off"]
 		cur.execute("INSERT INTO `heating`.`node_data` (`Node`, `Temperature`, `Threshold`, `Status`) VALUES ('%.0f', '%.1f', '%.1f', '%s');" % (i, node[i], threshold[i], status[0]))
-clear()
+"""clear()
 enter_start_values()
-sys.exit()
+sys.exit()"""
 
 for number in range(20):
-	temp = [20+val(),21+val(),22+val(),23+val(),24+val(),25+val(),26+val(),27+val(),28+val(),29+val(),30+val(),31+val(),32+val()]
-	threshold = [16,16,16,16,16,16,16,16,16,16,16,16]
-	#temp = [21,22,23,24,25,26,27,28,29,30,31,32]
-	node = [temp[0],temp[1],temp[2],temp[3],temp[4],temp[5],temp[6],temp[7],temp[8],temp[9],temp[10],temp[11]]
+	temp = [20+val(),21+val(),22+val(),23+val()]
+	threshold = [16,16,16,16]
+	#temp = [21,22,23,24]
+	node = [temp[0],temp[1],temp[2],temp[3]]
 
-	for i in range(12):
+	for i in range(4):
 #		cur.execute("UPDATE `heating`.`node_data` SET (`Node`='%.0f', `Temperature`='%.1f', `Threshold`='%.1f') WHERE `Node`='%.0f';" % (i, node[i], threshold[i], i))
 		cur.execute("UPDATE heating.node_data SET Node='%.0f', Temperature='%.1f', Threshold='%.1f' WHERE Node='%.0f';" % (i, node[i], threshold[i], i))
                 print "Found match with node: %.0f, Inserted into mysql database:" % i
@@ -63,19 +63,16 @@ for number in range(20):
 	cur.execute("SELECT * FROM node_data")
 	print "Database:"
 	for row in cur.fetchall():
-	        print "		Node: %.0f Temperature: %.1f Threshold: %.1f" % (row[0], row[1], row[2])
+	        print "		Node: %.0f Name: %s Temperature: %.1f Threshold: %.1f" % (float(row[0]), row[1], float(row[2]), float(row[3]))
 
 	data = {}
 	data['time'] = time.strftime("%d/%m/%Y %H:%M:%S") # time
 
-	for x in range(12):
+	for x in range(4):
 	        data['node'+str(x)] = str(node[x]) # degs C
 
 	entry = spr_client.InsertRow(data, spreadsheet_key, worksheet_id)
-	print "Inserting into google docs: "
-	print "		" + str(entry)
-
-#        if isinstance(entry, gdata.spreadsheet.SpreadsheetsList):
-#                print "Insert row succeeded."
-#        else:
-#                print "Insert row failed."
+        if isinstance(entry, gdata.spreadsheet.SpreadsheetsList):
+                print "Insert into Google Spreadsheet succeeded."
+        else:
+                print "Insert into Google Spreadsheet failed."
