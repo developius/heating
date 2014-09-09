@@ -11,7 +11,7 @@ unsigned char relay_status;
 String node;
 int threshold = 16;
 String override; // not int as will contain 0,1 & "-"
-int temp = 10; // testing purposes
+int temp; // testing purposes
 
 void setup(void){
   pinMode(relay, OUTPUT);
@@ -55,14 +55,15 @@ void loop(void){
        node = String(payload[0]) + String(payload[1]);
        if (node == "01"){
          if ((String(payload[2]) + String(payload[3]) + String(payload[4]) + String(payload[5])) == "temp"){
-           Serial.print("Server asked for temp... sending...");
-           radio.stopListening();
-           while (!radio.write(&temp,sizeof(unsigned long))){
-             Serial.print("Failed");
+             temp = random(0,30);
+             Serial.print("Server asked for temp... sending...");
+             radio.stopListening();
+             while (!radio.write(&temp,sizeof(temp))){
+           //    Serial.print("\nFailed");
+             }
+             Serial.print("Sent\n");
+             radio.startListening();
            }
-           Serial.print("Sent\n");
-           radio.startListening();
-         }
          else {
            threshold = (String(payload[2]) + String(payload[3])).toInt();
            override = String(payload[4]);
