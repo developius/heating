@@ -10,7 +10,7 @@ const int statusLED = 7;
 unsigned char relay_status;
 String node;
 int threshold = 16;
-String override; // not int as will contain 0,1 & "-"
+String device_status; // not int as will contain 0,1 & "-"
 int temp; // testing purposes
 
 void setup(void){
@@ -52,9 +52,9 @@ void loop(void){
     while (!done){
        done = radio.read(payload, length);
        payload[length] = 0;
-       node = String(payload[0]) + String(payload[1]);
-       if (node == "01"){
-         if ((String(payload[2]) + String(payload[3]) + String(payload[4]) + String(payload[5])) == "temp"){
+       node = String(payload[0]);// + String(payload[1]);
+       if (node == "0"){
+         if ((String(payload[1]) + String(payload[2]) + String(payload[3]) + String(payload[4])) == "temp"){
              temp = random(0,30);
              Serial.print("Server asked for temp... sending...");
              radio.stopListening();
@@ -65,29 +65,29 @@ void loop(void){
              radio.startListening();
            }
          else {
-           threshold = (String(payload[2]) + String(payload[3])).toInt();
-           override = String(payload[4]);
-           // check for override
-           if (override == "1"){
+           threshold = (SMtring(payload[1]) + String(payload[2])).toInt();
+           device_status = String(payload[3]);
+           // check for device_status
+           if (device_status == "1"){
              relay_status = HIGH;
            }
-           if (override == "0") {
+           if (device_status == "0") {
              relay_status = LOW;
            }
            Serial.print("Node: " + node + "\n");
            Serial.print("Threshold: " + String(threshold) + "\n");
-           Serial.print("Override: " + override + "\n");
+           Serial.print("device_status: " + device_status + "\n");
          }
        }
        digitalWrite(statusLED, LOW);
     }
   }
   // check if we are too cold
-  if (temp < threshold && override == "-"){
+  if (temp < threshold && device_status == "1"){
     relay_status = HIGH;
     Serial.print("Too cold!\n\r");
   }
-  else if (temp >= threshold && override == "-") { // we are too hot
+  else if (temp >= threshold && device_status == "1") { // we are too hot
     relay_status = LOW;
     Serial.print("Too hot!\n\r");
   }
