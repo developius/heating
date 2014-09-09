@@ -1,22 +1,27 @@
 from pyRF24 import pyRF24
-import time, mode
+import time, binascii
 radio = pyRF24("/dev/spidev0.0", 8000000, 18, retries = (15, 15), channel = 76, dynamicPayloads = True, autoAck = True)
 
-mode.send()
-radio.startListening()
+def recv():
+	radio.startListening()
+
+def send(): 
+	radio.stopListening()
+
 
 while True:
 	message = input("Message: ")
 	if message == "exit": break
-	radio.stopListening()
+	send()
 	while not radio.write(str(message)):
 		print(message, "failed")
 	print("Sent", message)
-	radio.startListening()
-#	if radio.write(str(message)): print("Sent", message)
-#	else: print(message, "failed")
+	recv()
 	time.sleep(0.25)
-	
-"""for i in range(0,101):
-	if radio.write(str(i)): print(i, "sent")
-	time.sleep(0.25)"""
+	if radio.available():
+		payload = radio.read(radio.getDynamicPayloadSize())
+		if payload:
+			payload = binascii.hexlify(payload)
+			payload = payload.decode('ascii')
+			payload = str(int(payload, 16))
+			print("Got: %s" % payload)
