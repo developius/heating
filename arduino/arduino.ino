@@ -55,7 +55,7 @@ void loop(void){
        node = String(payload[0]);// + String(payload[1]);
        if (node == "0"){
          if ((String(payload[1]) + String(payload[2]) + String(payload[3]) + String(payload[4])) == "temp"){
-             temp = random(0,30);
+             temp = random(10,20);
              Serial.print("Server asked for temp... sending...");
              radio.stopListening();
              while (!radio.write(&temp,sizeof(temp))){
@@ -65,7 +65,7 @@ void loop(void){
              radio.startListening();
            }
          else {
-           threshold = (SMtring(payload[1]) + String(payload[2])).toInt();
+           threshold = (String(payload[1]) + String(payload[2])).toInt();
            device_status = String(payload[3]);
            // check for device_status
            if (device_status == "1"){
