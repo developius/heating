@@ -1,5 +1,5 @@
 from pyRF24 import pyRF24
-import time
+import time, binascii
 import mode # sets up pipes
 radio = pyRF24("/dev/spidev0.0", 8000000, 18, retries = (15, 15), channel = 76, dynamicPayloads = True, autoAck = True)
 
@@ -13,4 +13,8 @@ while True:
 	time.sleep(0.25)
 	if radio.available():
 		payload = radio.read(radio.getDynamicPayloadSize())
-		if payload is not None: print("Got: %s" % payload) # gets gibberish
+		if payload:
+			payload = binascii.hexlify(payload)
+			payload = payload.decode('ascii')
+			payload = str(int(payload, 16))
+			print("Got: %s" % payload)
