@@ -19,7 +19,8 @@ pipes = [0xF0F0F0F0E1, 0xF0F0F0F0E2]
 radio.openWritingPipe(pipes[0])
 radio.openReadingPipe(1, pipes[1])
 
-sent_thresholds = {"1": 16}
+last_threshold = {"0": ""}
+last_status = {"0": ""}
 nodes = [0]
 
 def recv():
@@ -30,13 +31,12 @@ def send():
 
 while True:
 	for node in nodes:
-		print("Node %i" % node)
 		send()
 		if not radio.write(str(str(node) + "temp")):
 			cur.execute("UPDATE heating.node_data SET Status='%s' WHERE Node='%i';" % ("off", node))
-			print("down")
+			print("Down")
 			break
-		print("Sent")
+		cur.execute("UPDATE heating.node_data SET Status='%s' WHERE Node='%i';" % ("on", node))
 		recv()
 		time.sleep(0.25)
 		if radio.available():
@@ -45,20 +45,22 @@ while True:
 				temp = binascii.hexlify(payload)
 				temp = temp.decode('ascii')
 				temp = int(str(int(temp, 16)))
-				print("Temp %i" % temp)
-				cur.execute("UPDATE heating.node_data SET Temperature='%.1f', Status='%s' WHERE Node='%i';" % (float(temp), "on", node))
+				cur.execute("UPDATE heating.node_data SET Temperature='%.1f' WHERE Node='%i';" % (float(temp), node))
 				ws.append_row([time.strftime("%d/%m/%Y %H:%M:%S"),float(temp)])
-			else:
-				cur.execute("UPDATE heating.node_data SET Status='%s' WHERE Node='%i';" % ("off", node))
-		else:
-			cur.execute("UPDATE heating.node_data SET Status='%s' WHERE Node='%i';" % ("off", node))
 
-		time.sleep(1)
-
-"""		if mysql_db_threshold[node] != sent_threshold[node]:
-			print("Found threshold change with node %i" % node)
-			out = "1" + threshold
-			radio.write(out,len(out))
-		if mysql_db_scheldule[node] != schedule[node]:
-			print("Found schedule change with node %i" % node)
-			scedule[node] = mysql_db_schedule[node]"""
+		cur.execute("SELECT Threshold, Status FROM heating.node_data WHERE Node='%i'" % node)
+		for Threshold, Status in cur:
+			if Threshold != last_threshold["%i" % node]:
+				print("Thresholds are not the same for node %i: %s" % (node, Threshold))
+				last_threshold["%i" % node] = Threshold
+			if Status == "on": Status = "1"
+			if Status == "off": Status = "0"
+			if Status != last_status["%i" % node]:
+				print("The status is not the same for node %i: %s" % (node, Status))
+				last_status["%i" % node] = Status
+			send()
+			while not radio.write(str(node) + str(last_threshold["%i" % node]) + str(last_status["%i" % node])):
+				pass
+			print("Sent: " + str(node) + str(last_threshold["%i" % node]) + str(last_status["%i" % node]))
+			recv()
+		time.sleep(10)
