@@ -6,13 +6,13 @@ Source code for heating project
 Requirements
 ============
 
-AlertMePy (https://github.com/birdslikewires/AlertMePy)
+AlertMePy (http://github.com/birdslikewires/AlertMePy)
 
-gdata (https://pypi.python.org/pypi/gdata)
+gspread (http://github.com/burnash/gspread)
 
-RF24 (https://github.com/stanleyseow/RF24)
+RF24 (http://github.com/stanleyseow/RF24)
 
-MySQLdb (https://pypi.python.org/pypi/MySQL-python)
+mysql (http://dev.mysql.com/doc/connector-python/en/)
 
 Notes
 =====
