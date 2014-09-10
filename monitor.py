@@ -1,7 +1,7 @@
 #!/usr/bin/python
 from pyRF24 import pyRF24
-import time, binascii, time, os, sys, gspread, datetime
-import mysql.connector
+import time, binascii, time, os, sys, gspread, datetime, json, mysql.connector
+from urllib import request
 
 credentials = []
 
@@ -36,7 +36,14 @@ def day(): # work out if day or night
 	if now.hour >= 10 and now.hour <= 7: return False
 	else: return True
 
+def ext_temp():
+	req = request.urlopen('http://api.openweathermap.org/data/2.5/find?q=laxfield&units=metric')
+	encoding = req.headers.get_content_charset()
+	obj = json.loads(req.read().decode(encoding))
+	return obj['list'][0]['main']['temp']
+
 while True:
+	print(ext_temp())
 	for node in nodes:
 		send()
 		if not radio.write(str(str(node) + "temp")):
