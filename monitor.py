@@ -62,7 +62,7 @@ while True:
 				temp = temp.decode('ascii')
 				temp = int(str(int(temp, 16)))
 				cur.execute("UPDATE heating.node_data SET Temperature='%.1f' WHERE Node='%i';" % (float(temp), node))
-				ws.append_row([time.strftime("%d/%m/%Y %H:%M:%S"),float(temp)])
+				ws.append_row([time.strftime("%d/%m/%Y %H:%M:%S"),float(temp), None, None, ext_temp()])
 
 		cur.execute("SELECT Threshold, Status, Night_Status, Day_Status FROM heating.node_data WHERE Node='%i'" % node)
 		for Threshold, Day_Status, Night_Status, Status in cur:
