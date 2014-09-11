@@ -23,6 +23,7 @@ last_threshold = {"0": ""}
 last_status = {"0": ""}
 last_night_status = {"0": ""}
 last_day_status = {"0": ""}
+node_temp = {"0": None, "1": None, "2": None}
 nodes = [0]
 
 def recv():
@@ -62,7 +63,7 @@ while True:
 				temp = temp.decode('ascii')
 				temp = int(str(int(temp, 16)))
 				cur.execute("UPDATE heating.node_data SET Temperature='%.1f' WHERE Node='%i';" % (float(temp), node))
-				ws.append_row([time.strftime("%d/%m/%Y %H:%M:%S"),float(temp), None, None, ext_temp()])
+				node_temp["%i" % node] = temp
 
 		cur.execute("SELECT Threshold, Status, Night_Status, Day_Status FROM heating.node_data WHERE Node='%i'" % node)
 		for Threshold, Day_Status, Night_Status, Status in cur:
@@ -91,3 +92,7 @@ while True:
 			print("Sent: " + str(node) + str(last_threshold["%i" % node]) + str(last_status["%i" % node]))
 			recv()
 		time.sleep(10)
+	try:
+		ws.append_row([time.strftime("%d/%m/%Y %H:%M:%S"), node_temp["0"], node_temp["1"], node_temp["2"], ext_temp()])
+	except:
+		print("Insert failed")
