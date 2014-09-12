@@ -26,6 +26,12 @@ last_day_status = {"0": ""}
 node_temp = {"0": None, "1": None, "2": None}
 nodes = [0]
 
+def ext_temp():
+        req = request.urlopen('http://api.openweathermap.org/data/2.5/find?q=laxfield&units=metric')
+        encoding = req.headers.get_content_charset()
+        obj = json.loads(req.read().decode(encoding))
+        return obj['list'][0]['main']['temp']
+
 def recv():
 	radio.startListening()
 
@@ -37,14 +43,7 @@ def day(): # work out if day or night
 	if now.hour >= 10 and now.hour <= 7: return False
 	else: return True
 
-def ext_temp():
-	req = request.urlopen('http://api.openweathermap.org/data/2.5/find?q=laxfield&units=metric')
-	encoding = req.headers.get_content_charset()
-	obj = json.loads(req.read().decode(encoding))
-	return obj['list'][0]['main']['temp']
-
 while True:
-	print(ext_temp())
 	for node in nodes:
 		send()
 		if not radio.write(str(str(node) + "temp")):
@@ -62,6 +61,8 @@ while True:
 				temp = binascii.hexlify(payload)
 				temp = temp.decode('ascii')
 				temp = int(str(int(temp, 16)))
+				hour = datetime.datetime.now().hour
+				cur.execute("UPDATE heating.temp_log SET %s='%.1f' WHERE Hour='%i';" % ("Node" + str(node), float(temp), hour))
 				cur.execute("UPDATE heating.node_data SET Temperature='%.1f' WHERE Node='%i';" % (float(temp), node))
 				node_temp["%i" % node] = temp
 
@@ -93,6 +94,6 @@ while True:
 			recv()
 		time.sleep(10)
 	try:
-		ws.append_row([time.strftime("%d/%m/%Y %H:%M:%S"), node_temp["0"], node_temp["1"], node_temp["2"], ext_temp()])
+		ws.append_row([time.strftime("%Y-%m-%d %H:%M:%S"), node_temp["0"], node_temp["1"], node_temp["2"], ext_temp()])
 	except:
-		print("Insert failed")
+		print("Insert into GS failed")
