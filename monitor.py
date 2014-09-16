@@ -11,15 +11,15 @@ for line in open("credentials.txt", "r"):
 db = mysql.connector.connect(user=credentials[1], password=credentials[2], host=credentials[0], database=credentials[3], autocommit = True)
 cur = db.cursor()
 
-gc = gspread.login(credentials[4], credentials[5])
-ws = gc.open("Heating Data").sheet1
+#gc = gspread.login(credentials[4], credentials[5])
+#ws = gc.open("Heating Data").sheet1
 
 radio = pyRF24("/dev/spidev0.0", 8000000, 18, retries = (15, 15), channel = 76, dynamicPayloads = True, autoAck = True)
 pipes = [0xF0F0F0F0E1, 0xF0F0F0F0E2]
 radio.openWritingPipe(pipes[0])
 radio.openReadingPipe(1, pipes[1])
 
-last_threshold = {"0": ""}
+last_threshold = {"0": [None,None,None,None,None,None,None,None,None,None,None,None,None,None,None,None,None,None,None,None,None,None,None]}
 last_status = {"0": ""}
 last_night_status = {"0": ""}
 last_day_status = {"0": ""}
@@ -45,55 +45,62 @@ def day(): # work out if day or night
 
 while True:
 	for node in nodes:
+		changed = False
 		send()
 		if not radio.write(str(str(node) + "temp")):
-			cur.execute("UPDATE heating.node_data SET Status='%s' WHERE Node='%i';" % ("off", node))
-			print("Down")
+#			cur.execute("UPDATE heating.node_data SET Status='%s' WHERE Node='%i';" % ("off", node))
+#			print("Down")
 			break
 #		cur.execute("UPDATE heating.node_data SET Status='%s' WHERE Node='%i';" % ("on", node)) # is supposed to detect if node is up but if
 													# you turn off the node in the db, this turns
-													# it back on
+													# it back off
+		hour = datetime.datetime.now().hour
 		recv()
 		time.sleep(0.25)
-		if radio.available():
+		timeout = false;
+		unsigned long started_waiting_at = millis();
+		while (not radio.available() and not timeout):
+			if (millis() - started_waiting_at > 5000):
+				timeout = true;
+		if timeout:
+			print("Failed");
+		else:
 			payload = radio.read(radio.getDynamicPayloadSize())
-			if payload:
-				temp = binascii.hexlify(payload)
-				temp = temp.decode('ascii')
-				temp = int(str(int(temp, 16)))
-				hour = datetime.datetime.now().hour
-				cur.execute("UPDATE heating.temp_log SET %s='%.1f' WHERE Hour='%i';" % ("Node" + str(node), float(temp), hour))
-				cur.execute("UPDATE heating.node_data SET Temperature='%.1f' WHERE Node='%i';" % (float(temp), node))
-				node_temp["%i" % node] = temp
+			temp = binascii.hexlify(payload)
+			temp = temp.decode('ascii')
+			temp = int(str(int(temp, 16)))
+			cur.execute("UPDATE heating.temp_log SET %s='%.1f' WHERE Hour='%i';" % ("Node" + str(node), float(temp), hour))
+			cur.execute("UPDATE heating.node_data SET Temperature='%.1f' WHERE Node='%i';" % (float(temp), node))
+			node_temp["%i" % node] = temp
+			print("Node %i %.2f" % (node, temp))
 
-		cur.execute("SELECT Threshold, Status, Night_Status, Day_Status FROM heating.node_data WHERE Node='%i'" % node)
-		for Threshold, Day_Status, Night_Status, Status in cur:
-			if Threshold != last_threshold["%i" % node]:
-#				print("Thresholds are not the same for node %i" % node)
-				last_threshold["%i" % node] = Threshold
-			if Status == "on": Status = "1"
-			if Status == "off": Status = "0"
+		cur.execute("SELECT * from heating.node_threshold WHERE %i='%i'" % (hour, hour))
+		for Threshold in cur:
+			if Threshold[hour + 1] != last_threshold["%i" % node][hour]:
+				print("Change with thresholds: %i" % Threshold[hour + 1])
+				last_threshold["%i" % node][hour] = int(Threshold[hour + 1])
+				changed = True
+
+		cur.execute("SELECT Status from heating.node_data WHERE Node='%i'" % node)
+		for Status in cur:
+			if Status[0] == "on": Status = "1"
+			if Status[0] == "off": Status = "0"
 			if Status != last_status["%i" % node]:
-#				print("The status is not the same for node %i" % node)
-				last_status["%i" % node] = Status
+				print("Change with device status")
+				last_status['%i' % node] = Status
+				changed = True
+
+		if changed == True:
 			send()
-			if (Day_Status != last_day_status["%i" % node]):
-#				print("Day_Status is not the same for node %i" % node)
-				last_day_status["%i" % node] = Day_Status
-
-			if (Night_Status != last_night_status["%i" % node]):
-#                                print("Night_Status is not the same for node %i" % node)
-                                last_night_status["%i" % node] = Night_Status
-
-			if (last_day_status["%i" % node] == "off" and day()) or (last_night_status["%i" % node] == "on" and not day()): # we want it off because of the time
-				last_status["%i" % node] = "0"
-
-			while not radio.write(str(node) + str(last_threshold["%i" % node]) + str(last_status["%i" % node])):
+			time.sleep(0.25)
+			while not radio.write(str(node) + str(last_threshold["%i" % node][hour]) + str(last_status["%i" % node])):
+	#			print("Failed to update node")
 				pass
-			print("Sent: " + str(node) + str(last_threshold["%i" % node]) + str(last_status["%i" % node]))
+			print("Sent: " + str(node) + str(last_threshold["%i" % node][hour]) + str(last_status["%i" % node]))
 			recv()
 		time.sleep(10)
-	try:
+"""	try:
 		ws.append_row([time.strftime("%Y-%m-%d %H:%M:%S"), node_temp["0"], node_temp["1"], node_temp["2"], ext_temp()])
 	except:
-		print("Insert into GS failed")
+		print("Insert into GS failed")"""
+
