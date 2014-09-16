@@ -57,13 +57,13 @@ while True:
 		hour = datetime.datetime.now().hour
 		recv()
 		time.sleep(0.25)
-		timeout = false;
-		unsigned long started_waiting_at = millis();
+		timeout = False
+		started_waiting_at = time.time()
 		while (not radio.available() and not timeout):
-			if (millis() - started_waiting_at > 5000):
-				timeout = true;
+			if ((time.time() - started_waiting_at) > 5000):
+				timeout = True
 		if timeout:
-			print("Failed");
+			print("Failed")
 		else:
 			payload = radio.read(radio.getDynamicPayloadSize())
 			temp = binascii.hexlify(payload)
