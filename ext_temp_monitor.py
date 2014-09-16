@@ -21,5 +21,10 @@ def ext_temp():
 	return obj['list'][0]['main']['temp']
 
 while True:
-	cur.execute("INSERT INTO heating.ext_temp_log VALUES ('%s', '%.2f')" % (time.strftime("%d-%m-%Y %H:%M:%S"), ext_temp()))
+	hour = datetime.datetime.now().hour
+	try:
+		cur.execute("UPDATE heating.ext_temp_log SET `%i`='%i'" % (hour, ext_temp()))
+		print(ext_temp())
+	except:
+		pass
 	time.sleep(60) # * 60
