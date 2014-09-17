@@ -11,8 +11,8 @@ for line in open("credentials.txt", "r"):
 db = mysql.connector.connect(user=credentials[1], password=credentials[2], host=credentials[0], database=credentials[3], autocommit = True)
 cur = db.cursor()
 
-gc = gspread.login(credentials[4], credentials[5])
-ws = gc.open("Heating Data").sheet1
+#gc = gspread.login(credentials[4], credentials[5])
+#ws = gc.open("Heating Data").sheet1
 
 def ext_temp():
 	req = request.urlopen('http://api.openweathermap.org/data/2.5/find?q=laxfield&units=metric')
@@ -26,5 +26,5 @@ while True:
 		cur.execute("UPDATE heating.ext_temp_log SET `%i`='%i'" % (hour, ext_temp()))
 		print(ext_temp())
 	except:
-		pass
-	time.sleep(60) # * 60
+		print("Failed to get temp")
+	time.sleep(5) # * 60
