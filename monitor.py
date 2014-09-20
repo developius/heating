@@ -15,6 +15,7 @@ cur = db.cursor()
 #ws = gc.open("Heating Data").sheet1
 
 radio = pyRF24("/dev/spidev0.0", 8000000, 18, retries = (15, 15), channel = 76, dynamicPayloads = True, autoAck = True)
+radio.setDataRate(2)
 pipes = [0xF0F0F0F0E1, 0xF0F0F0F0E2]
 radio.openWritingPipe(pipes[0])
 radio.openReadingPipe(1, pipes[1])
@@ -63,7 +64,7 @@ while True:
 			if ((time.time() - started_waiting_at) > 5000):
 				timeout = True
 		if timeout:
-			print("Failed")
+			break
 		else:
 			payload = radio.read(radio.getDynamicPayloadSize())
 			temp = binascii.hexlify(payload)
@@ -98,7 +99,7 @@ while True:
 				pass
 			print("Sent: " + str(node) + str(last_threshold["%i" % node][hour]) + str(last_status["%i" % node]))
 			recv()
-		time.sleep(10)
+		time.sleep(1)
 """	try:
 		ws.append_row([time.strftime("%Y-%m-%d %H:%M:%S"), node_temp["0"], node_temp["1"], node_temp["2"], ext_temp()])
 	except:
