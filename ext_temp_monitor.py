@@ -18,13 +18,13 @@ def ext_temp():
 	req = request.urlopen('http://api.openweathermap.org/data/2.5/find?q=laxfield&units=metric')
 	encoding = req.headers.get_content_charset()
 	obj = json.loads(req.read().decode(encoding))
-	return obj['list'][0]['main']['temp']
+	return round(obj['list'][0]['main']['temp'], 1)
 
 while True:
 	hour = datetime.datetime.now().hour
 	try:
-		cur.execute("UPDATE heating.ext_temp_log SET `%i`='%i'" % (hour, ext_temp()))
+		cur.execute("UPDATE heating.ext_temp_log SET `0%i`='%i'" % (hour, ext_temp()))
 		print(ext_temp())
-	except:
-		print("Failed to get temp")
+	except urllib.error.HTTPError as error:
+		print("Failed to get temp: %s" % error)
 	time.sleep(5) # * 60

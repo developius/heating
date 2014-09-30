@@ -11,10 +11,11 @@ for line in open("credentials.txt", "r"):
 db = mysql.connector.connect(user=credentials[1], password=credentials[2], host=credentials[0], database=credentials[3], autocommit = True)
 cur = db.cursor()
 
-#gc = gspread.login(credentials[4], credentials[5])
-#ws = gc.open("Heating Data").sheet1
+gc = gspread.login(credentials[4], credentials[5])
+ws = gc.open("Heating Data").sheet1
 
 radio = pyRF24("/dev/spidev0.0", 8000000, 18, retries = (15, 15), channel = 76, dynamicPayloads = True, autoAck = True)
+radio.setDataRate(2)
 pipes = [0xF0F0F0F0E1, 0xF0F0F0F0E2]
 radio.openWritingPipe(pipes[0])
 radio.openReadingPipe(1, pipes[1])
@@ -49,7 +50,7 @@ while True:
 		send()
 		if not radio.write(str(str(node) + "temp")):
 #			cur.execute("UPDATE heating.node_data SET Status='%s' WHERE Node='%i';" % ("off", node))
-#			print("Down")
+			print("Down")
 			break
 #		cur.execute("UPDATE heating.node_data SET Status='%s' WHERE Node='%i';" % ("on", node)) # is supposed to detect if node is up but if
 													# you turn off the node in the db, this turns
@@ -60,10 +61,10 @@ while True:
 		timeout = False
 		started_waiting_at = time.time()
 		while (not radio.available() and not timeout):
-			if ((time.time() - started_waiting_at) > 5000):
+			if ((time.time() - started_waiting_at) > 5):
 				timeout = True
 		if timeout:
-			print("Failed")
+			break
 		else:
 			payload = radio.read(radio.getDynamicPayloadSize())
 			temp = binascii.hexlify(payload)
@@ -98,9 +99,8 @@ while True:
 				pass
 			print("Sent: " + str(node) + str(last_threshold["%i" % node][hour]) + str(last_status["%i" % node]))
 			recv()
-		time.sleep(10)
-"""	try:
+		time.sleep(1)
+	try:
 		ws.append_row([time.strftime("%Y-%m-%d %H:%M:%S"), node_temp["0"], node_temp["1"], node_temp["2"], ext_temp()])
 	except:
-		print("Insert into GS failed")"""
-
+		print("Insert into GS failed")
