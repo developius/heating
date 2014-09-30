@@ -54,22 +54,22 @@ while True:
 	for node in nodes:
 		changed = False
 		send()
-		if not radio.write(str(str(node) + "temp")):
-#			print("Node %i down" % node)
-			break
+		timeout = False
+		started_waiting_at = time.time()
+		while not radio.write(str(str(node) + "temp")) and not timeout:
+			if ((time.time() - started_waiting_at) > 5): timeout = True
+		if timeout: break
 #			cur.execute("UPDATE heating.node_data SET Status='%s' WHERE Node='%i';" % ("off", node))
 #			cur.execute("UPDATE heating.node_data SET Status='%s' WHERE Node='%i';" % ("on", node)) # is supposed to detect if node is up but if
-													# you turn off the node in the db, this turns
-													# it back off
+														# you turn off the node in the db, it turns
+														# it back off
 		hour = datetime.datetime.now().hour
 		recv()
 		timeout = False
 		started_waiting_at = time.time()
-		while (not radio.available() and not timeout):
-			if ((time.time() - started_waiting_at) > 5):
-				timeout = True
-		if timeout:
-			print("Could not get temp from node %i" % node); break
+		while not radio.available() and not timeout:
+			if ((time.time() - started_waiting_at) > 5): timeout = True
+		if timeout: break
 		else:
 			payload = radio.read(radio.getDynamicPayloadSize())
 			temp = binascii.hexlify(payload)
@@ -82,7 +82,7 @@ while True:
 
 		cur.execute("SELECT * from heating.node_threshold WHERE %i='%i'" % (hour, hour))
 		for Threshold in cur:
-			if Threshold[hour + 1] != last_threshold["%i" % node][hour]:
+			if Threshold[hour + 1] != last_threshold["%i" % node][hour]: # [hour + 1] allows for 0th index
 				print("Change with thresholds: %i" % Threshold[hour + 1])
 				last_threshold["%i" % node][hour] = int(Threshold[hour + 1])
 				changed = True
@@ -95,17 +95,19 @@ while True:
 				print("Change with device status")
 				last_status['%i' % node] = Status
 				changed = True
-
+		time.sleep(1)
 		if changed == True:
-#			send()
-#			print("Sending " + str(str(node) + str(last_threshold["%i" % node][hour]) + str(last_status["%i" % node])))
-#			while not radio.write(str(str(node) + str(last_threshold["%i" % node][hour]) + str(last_status["%i" % node]))):
-#				pass
-#			print("Sent")"""
 			send()
-			while not radio.write(str(node) + str(last_threshold["%i" % node][hour]) + str(last_status["%i" % node])):
-				pass
-			print("Sent: " + str(node) + str(last_threshold["%i" % node][hour]) + str(last_status["%i" % node]))
+			time.sleep(0.25)
+			timeout = False
+			started_waiting_at = time.time()
+			while not radio.write(str(node) + str(last_threshold["%i" % node][hour]) + str(last_status["%i" % node])) and not timeout: # never works
+				if ((time.time() - started_waiting_at) > 5): timeout = True
+			if timeout:
+				print("Could not update node %i" % node)
+				last_threshold["%i" % node][hour] = None # --| next time round it's still different so that we retry to update the node
+				last_status["%i" % node][hour] = None # --| ''
+				break
 			recv()
 		time.sleep(1)
 #	try:
