@@ -106,7 +106,7 @@ while True:
 			if timeout:
 				print("Could not update node %i" % node)
 				last_threshold["%i" % node][hour] = None # --| next time round it's still different so that we retry to update the node
-				last_status["%i" % node][hour] = None # --| ''
+				last_status["%i" % node] = None		 # --| ''
 				break
 			recv()
 		time.sleep(1)
