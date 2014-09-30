@@ -100,6 +100,7 @@ while True:
 			send()
 			time.sleep(0.25)
 			timeout = False
+			print("Sending " + str(node) + str(last_threshold["%i" % node][hour]) + str(last_status["%i" % node]))
 			started_waiting_at = time.time()
 			while not radio.write(str(node) + str(last_threshold["%i" % node][hour]) + str(last_status["%i" % node])) and not timeout: # never works
 				if ((time.time() - started_waiting_at) > 5): timeout = True
@@ -108,7 +109,6 @@ while True:
 				last_threshold["%i" % node][hour] = None # --| next time round it's still different so that we retry to update the node
 				last_status["%i" % node] = None		 # --| ''
 				break
-			recv()
 		time.sleep(1)
 #	try:
 #		ws.append_row([time.strftime("%Y-%m-%d %H:%M:%S"), node_temp["0"], node_temp["1"], node_temp["2"], ext_temp()])
