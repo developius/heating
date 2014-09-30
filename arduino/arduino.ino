@@ -39,11 +39,11 @@ void setup(void){
 }
 
 void loop(void){
+  radio.startListening();
   sensors.requestTemperatures();
   temp = sensors.getTempCByIndex(0);
   while (radio.available()){
     digitalWrite(statusLED, HIGH);
-    //    unsigned char length = radio.getDynamicPayloadSize();
     int length = radio.getDynamicPayloadSize();
     bool done = false;
     while (!done){
@@ -66,7 +66,6 @@ void loop(void){
           }
           else {
             Serial.print("sent\n");
-            radio.startListening();
           }
         }
         else {
@@ -79,9 +78,9 @@ void loop(void){
           Serial.print(sensors.getTempCByIndex(0));
           Serial.print("\n");
         }
+        digitalWrite(statusLED, LOW);
       }
     }
-    digitalWrite(statusLED, LOW);
   }
   // check if we are too cold
   if (temp < threshold && device_status == "1"){
