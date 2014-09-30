@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 from pyRF24 import pyRF24
 import time, binascii, time, os, sys, gspread, datetime, json, mysql.connector
 from urllib import request
@@ -11,8 +11,11 @@ for line in open("credentials.txt", "r"):
 db = mysql.connector.connect(user=credentials[1], password=credentials[2], host=credentials[0], database=credentials[3], autocommit = True)
 cur = db.cursor()
 
-gc = gspread.login(credentials[4], credentials[5])
-ws = gc.open("Heating Data").sheet1
+"""try:
+	gc = gspread.login(credentials[4], credentials[5])
+	ws = gc.open("Heating Data").sheet1
+except:
+	print("Unable to connect to Google Spreadsheet")"""
 
 radio = pyRF24("/dev/spidev0.0", 8000000, 18, retries = (15, 15), channel = 76, dynamicPayloads = True, autoAck = True)
 radio.setDataRate(2)
@@ -26,6 +29,7 @@ last_night_status = {"0": ""}
 last_day_status = {"0": ""}
 node_temp = {"0": None, "1": None, "2": None}
 nodes = [0]
+update_payload = [None,None]
 
 def ext_temp():
         req = request.urlopen('http://api.openweathermap.org/data/2.5/find?q=laxfield&units=metric')
@@ -35,9 +39,11 @@ def ext_temp():
 
 def recv():
 	radio.startListening()
+	time.sleep(0.25)
 
 def send():
 	radio.stopListening()
+	time.sleep(0.25)
 
 def day(): # work out if day or night
 	now = datetime.datetime.now()
@@ -49,22 +55,21 @@ while True:
 		changed = False
 		send()
 		if not radio.write(str(str(node) + "temp")):
-#			cur.execute("UPDATE heating.node_data SET Status='%s' WHERE Node='%i';" % ("off", node))
-			print("Down")
+#			print("Node %i down" % node)
 			break
-#		cur.execute("UPDATE heating.node_data SET Status='%s' WHERE Node='%i';" % ("on", node)) # is supposed to detect if node is up but if
+#			cur.execute("UPDATE heating.node_data SET Status='%s' WHERE Node='%i';" % ("off", node))
+#			cur.execute("UPDATE heating.node_data SET Status='%s' WHERE Node='%i';" % ("on", node)) # is supposed to detect if node is up but if
 													# you turn off the node in the db, this turns
 													# it back off
 		hour = datetime.datetime.now().hour
 		recv()
-		time.sleep(0.25)
 		timeout = False
 		started_waiting_at = time.time()
 		while (not radio.available() and not timeout):
 			if ((time.time() - started_waiting_at) > 5):
 				timeout = True
 		if timeout:
-			break
+			print("Could not get temp from node %i" % node); break
 		else:
 			payload = radio.read(radio.getDynamicPayloadSize())
 			temp = binascii.hexlify(payload)
@@ -92,15 +97,18 @@ while True:
 				changed = True
 
 		if changed == True:
+#			send()
+#			print("Sending " + str(str(node) + str(last_threshold["%i" % node][hour]) + str(last_status["%i" % node])))
+#			while not radio.write(str(str(node) + str(last_threshold["%i" % node][hour]) + str(last_status["%i" % node]))):
+#				pass
+#			print("Sent")"""
 			send()
-			time.sleep(0.25)
 			while not radio.write(str(node) + str(last_threshold["%i" % node][hour]) + str(last_status["%i" % node])):
-	#			print("Failed to update node")
 				pass
 			print("Sent: " + str(node) + str(last_threshold["%i" % node][hour]) + str(last_status["%i" % node]))
 			recv()
 		time.sleep(1)
-	try:
-		ws.append_row([time.strftime("%Y-%m-%d %H:%M:%S"), node_temp["0"], node_temp["1"], node_temp["2"], ext_temp()])
-	except:
-		print("Insert into GS failed")
+#	try:
+#		ws.append_row([time.strftime("%Y-%m-%d %H:%M:%S"), node_temp["0"], node_temp["1"], node_temp["2"], ext_temp()])
+#	except:
+#		print("Insert into GS failed")

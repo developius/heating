@@ -2,6 +2,7 @@
 from pyRF24 import pyRF24
 import time, binascii, time, os, sys, gspread, datetime, json, mysql.connector
 from urllib import request
+import urllib
 
 credentials = []
 
@@ -23,8 +24,9 @@ def ext_temp():
 while True:
 	hour = datetime.datetime.now().hour
 	try:
-		cur.execute("UPDATE heating.ext_temp_log SET `0%i`='%i'" % (hour, ext_temp()))
-		print(ext_temp())
-	except urllib.error.HTTPError as error:
-		print("Failed to get temp: %s" % error)
+		temp = ext_temp()
+		cur.execute("UPDATE heating.ext_temp_log SET `0%i`='%i'" % (hour, temp))
+		print(temp)
+	except:
+		print("Failed to get temp")
 	time.sleep(5) # * 60

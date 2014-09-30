@@ -32,7 +32,7 @@ void setup(void){
   radio.setChannel(76);
   radio.setRetries(15,15);
   radio.openWritingPipe(pipes[0]); 
-  radio.openReadingPipe(1,pipes[1]); 
+  radio.openReadingPipe(1,pipes[1]);
   radio.startListening();
   Serial.println("\nReady!\n");
   delay(1000);
@@ -52,7 +52,7 @@ void loop(void){
       node = String(payload[0]);// + String(payload[1]);
       if (node == "0"){
         if ((String(payload[1]) + String(payload[2]) + String(payload[3]) + String(payload[4])) == "temp"){
-          Serial.print("Server asked for temp... sending...");
+          Serial.print("Server asked for temp... ");
           radio.stopListening();
           bool timeout = false;
           unsigned long started_waiting_at = millis();
@@ -62,10 +62,10 @@ void loop(void){
             }
           }
           if (timeout){
-            Serial.print("Failed\n");
+            Serial.print("failed\n");
           }
           else {
-            Serial.print("Sent\n");
+            Serial.print("sent\n");
             radio.startListening();
           }
         }
@@ -79,20 +79,19 @@ void loop(void){
           Serial.print(sensors.getTempCByIndex(0));
           Serial.print("\n");
         }
-        digitalWrite(statusLED, LOW);
       }
     }
+    digitalWrite(statusLED, LOW);
   }
   // check if we are too cold
   if (temp < threshold && device_status == "1"){
     relay_status = HIGH;
-//    Serial.print("Too cold!\n\r");
+    Serial.print("Too cold!\n\r");
   }
   else if (temp >= threshold && device_status == "1") { // we are too hot
     relay_status = LOW;
-//    Serial.print("Too hot!\n\r");
+    Serial.print("Too hot!\n\r");
   }
   digitalWrite(relay, relay_status);
   delay(250);
 }
-
