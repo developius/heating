@@ -30,7 +30,7 @@ except:
 	connection['gs'] = False
 	print("Failed")
 
-radio = pyRF24("/dev/spidev0.0", 8000000, 18, retries = (15, 15), channel = 76, dynamicPayloads = True, autoAck = True)
+radio = pyRF24("/dev/spidev0.0", 8000000, 25, retries = (15, 15), channel = 76, dynamicPayloads = True, autoAck = True)
 radio.setDataRate(2)
 pipes = [0xF0F0F0F0E1, 0xF0F0F0F0E2]
 radio.openWritingPipe(pipes[0])
@@ -126,7 +126,7 @@ while True:
 				print("	| Could not update node %i" % node)
 				last_threshold["%i" % node][hour] = None # --| next time round it's still different so that we retry to update the node
 				last_status["%i" % node] = None		 # --| ''
-		time.sleep(1)
+		time.sleep(10)
 	if connection['gs']:
 		try:
 			ws.append_row([time.strftime("%Y-%m-%d %H:%M:%S"), node_temp["0"], node_temp["1"], node_temp["2"], ext_temp()])
