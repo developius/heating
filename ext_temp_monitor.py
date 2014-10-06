@@ -29,4 +29,4 @@ while True:
 		print(temp)
 	except:
 		print("Failed to get temp")
-	time.sleep(5) # * 60
+	time.sleep(5)
