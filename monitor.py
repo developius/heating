@@ -77,8 +77,8 @@ while True:
 		while not radio.write(str(str(node) + "temp")) and not timeout:
 			if ((time.time() - started_waiting_at) > 5): timeout = True
 		if timeout: print("Node %i down" % node); break
-#			cur.execute("UPDATE heating.node_data SET Status='%s' WHERE Node='%i';" % ("off", node))
-#			cur.execute("UPDATE heating.node_data SET Status='%s' WHERE Node='%i';" % ("on", node)) # is supposed to detect if node is up but if
+#			cur.execute("UPDATE node_data SET Status='%s' WHERE Node='%i';" % ("off", node))
+#			cur.execute("UPDATE node_data SET Status='%s' WHERE Node='%i';" % ("on", node)) # is supposed to detect if node is up but if
 														# you turn off the node in the db, it turns
 														# it back off
 		hour = datetime.datetime.now().hour
@@ -94,19 +94,19 @@ while True:
 				temp = binascii.hexlify(payload)
 				temp = temp.decode('ascii')
 				temp = int(str(int(temp, 16)))
-				cur.execute("UPDATE heating.temp_log SET %s='%.1f' WHERE Hour='%i';" % ("Node" + str(node), float(temp), hour))
-				cur.execute("UPDATE heating.node_data SET Temperature='%.1f' WHERE Node='%i';" % (float(temp), node))
+				cur.execute("UPDATE temp_log SET %s='%.1f' WHERE Hour='%i';" % ("Node" + str(node), float(temp), hour))
+				cur.execute("UPDATE node_data SET Temperature='%.1f' WHERE Node='%i';" % (float(temp), node))
 				node_temp["%i" % node] = temp
 				print("Node %i %.2f" % (node, temp))
 
-			cur.execute("SELECT * from heating.node_threshold WHERE %i='%i'" % (hour, hour))
+			cur.execute("SELECT %s from node_threshold WHERE Hour='%i'" % ("Node" + str(node), hour))
 			for Threshold in cur:
-				if Threshold[hour + 1] != last_threshold["%i" % node][hour + 1]: # [hour + 1] allows for 0th index
-					print("	| Change with thresholds: %i" % Threshold[hour + 1])
-					last_threshold["%i" % node][hour] = int(Threshold[hour + 1])
+				if Threshold != last_threshold["%i" % node][hour]:
+					print("	| Change with thresholds: %i" % Threshold[0])
+					last_threshold["%i" % node][hour] = int(Threshold[0])
 					changed = True
 
-			cur.execute("SELECT Status from heating.node_data WHERE Node='%i'" % node)
+			cur.execute("SELECT Status from node_data WHERE Node='%i'" % node)
 			for Status in cur:
 				if Status[0] == "on": Status = "1"
 				if Status[0] == "off": Status = "0"
