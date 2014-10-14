@@ -46,6 +46,7 @@ while True:
 			print("Temp: %s" % temp)
 		except:
 			print("Failed to get temp")
+			temp = None
 		if temp:
 			cur.execute("UPDATE ext_temp_log SET `Temp`='%.1f' WHERE `Hour`='%i'" % (temp, hour))
 	time.sleep(60)
