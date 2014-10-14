@@ -44,7 +44,7 @@ nodes = [0]
 for node in nodes:
 	node_temp["%i" % node] = None
 	last_threshold["%i" % node] = []
-	for i in range(0,23):
+	for i in range(0,24):
 		last_threshold["%i" % node].append(None)
 	node_temp["%i" % node] = None
 	last_status["%i" % node] = None
@@ -63,11 +63,6 @@ def send():
 	radio.stopListening()
 	time.sleep(0.25)
 
-def day(): # work out if day or night
-	now = datetime.datetime.now()
-	if now.hour >= 10 and now.hour <= 7: return False
-	else: return True
-
 while True:
 	for node in nodes:
 		changed = False
@@ -82,6 +77,7 @@ while True:
 														# you turn off the node in the db, it turns
 														# it back off
 		hour = datetime.datetime.now().hour
+		print("Hour: %i" % hour)
 		recv()
 		timeout = False
 		started_waiting_at = time.time()
@@ -99,36 +95,41 @@ while True:
 				node_temp["%i" % node] = temp
 				print("Node %i %.2f" % (node, temp))
 
-			cur.execute("SELECT %s from node_threshold WHERE Hour='%i'" % ("Node" + str(node), hour))
+			cur.execute("SELECT %s from node_threshold WHERE `Hour`='%i'" % ("Node" + str(node), hour))
 			for Threshold in cur:
+				Threshold = int(Threshold[0])
 				if Threshold != last_threshold["%i" % node][hour]:
-					print("	| Change with thresholds: %i" % Threshold[0])
-					last_threshold["%i" % node][hour] = int(Threshold[0])
+					print("	| Change with thresholds: %s" % Threshold)
+					last_threshold["%i" % node][hour] = Threshold
 					changed = True
 
-			cur.execute("SELECT Status from node_data WHERE Node='%i'" % node)
+			cur.execute("SELECT Status from node_data WHERE `Node`='%i'" % node)
 			for Status in cur:
-				if Status[0] == "on": Status = "1"
-				if Status[0] == "off": Status = "0"
+				Status = Status[0]
+				if Status == "on": Status = 1
+				if Status == "off": Status = 0
 				if Status != last_status["%i" % node]:
-					print("	| Change with device status")
+					print("	| Change with device status: %s" % Status)
 					last_status['%i' % node] = Status
 					changed = True
 		if changed == True:
 			send()
 			time.sleep(0.25)
 			timeout = False
-			print("	| Sending " + str(node) + str(last_threshold["%i" % node][hour]) + str(last_status["%i" % node]))
+			print("	| Sending " + str(node) + str(last_threshold["%i" % node][hour]) + str(last_status["%i" % node]) + "...", end="")
 			started_waiting_at = time.time()
-			while not radio.write(str(node) + str(last_threshold["%i" % node][hour]) + str(last_status["%i" % node])) and not timeout: # never works
+			while not radio.write(str(node) + str(last_threshold["%i" % node][hour]) + str(last_status["%i" % node])) and not timeout:
 				if ((time.time() - started_waiting_at) > 5): timeout = True
 			if timeout:
-				print("	| Could not update node %i" % node)
+				print("	failed")
 				last_threshold["%i" % node][hour] = None # --| next time round it's still different so that we retry to update the node
 				last_status["%i" % node] = None		 # --| ''
+			else:
+				print(" sent")
 		time.sleep(10)
 	if connection['gs']:
 		try:
 			ws.append_row([time.strftime("%Y-%m-%d %H:%M:%S"), node_temp["0"], node_temp["1"], node_temp["2"], ext_temp()])
 		except:
-			print("Insert into GS failed")
+			pass
+#			print("Insert into GS failed")
