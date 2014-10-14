@@ -82,14 +82,15 @@ void loop(void){
       }
     }
   }
-  // check if we are too cold
+  // set the relay
   if (temp < threshold && device_status == "1"){
     relay_status = HIGH;
-//    Serial.print("Too cold!\n\r");
+  }
+  if (device_status == "0"){
+    relay_status = LOW;
   }
   else if (temp >= threshold && device_status == "1") { // we are too hot
     relay_status = LOW;
-//    Serial.print("Too hot!\n\r");
   }
   digitalWrite(relay, relay_status);
   delay(250);
