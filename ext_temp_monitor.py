@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 from pyRF24 import pyRF24
 import time, binascii, time, os, sys, gspread, datetime, json, mysql.connector
 from urllib import request

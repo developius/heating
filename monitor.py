@@ -78,14 +78,17 @@ while True:
 				if ((time.time() - started_waiting_at) > 5): timeout = True
 			if timeout: break
 			else:
-				payload = radio.read(radio.getDynamicPayloadSize())
-				temp = binascii.hexlify(payload)
-				temp = temp.decode('ascii')
-				temp = int(str(int(temp, 16)))
-				cur.execute("UPDATE temp_log SET %s='%.1f' WHERE Hour='%i';" % ("Node" + str(node), float(temp), hour))
-				cur.execute("UPDATE node_data SET Temperature='%.1f' WHERE Node='%i';" % (float(temp), node))
-				node_temp["%i" % node] = temp
-				print("Node %i %.2f" % (node, temp))
+				try:
+					payload = radio.read(radio.getDynamicPayloadSize())
+					temp = binascii.hexlify(payload)
+					temp = temp.decode('ascii')
+					temp = int(str(int(temp, 16)))
+					cur.execute("UPDATE temp_log SET %s='%.1f' WHERE Hour='%i';" % ("Node" + str(node), float(temp), hour))
+					cur.execute("UPDATE node_data SET Temperature='%.1f' WHERE Node='%i';" % (float(temp), node))
+					node_temp["%i" % node] = temp
+					print("Node %i %.2f" % (node, temp))
+				except ValueError:
+					print("Failed to get temp from node: %i" % node)
 
 			cur.execute("SELECT %s from node_threshold WHERE `Hour`='%i'" % ("Node" + str(node), hour))
 			for Threshold in cur:
@@ -127,3 +130,5 @@ while True:
 			except:
 				pass
 	#			print("Insert into GS failed")
+		cur.close()
+		db.close()
