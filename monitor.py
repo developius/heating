@@ -9,7 +9,8 @@ for line in open("credentials.txt", "r"):
 	credentials.append(line.split("\n")[0])
 connection = {"sql":False,"gs":False}
 
-radio = pyRF24("/dev/spidev0.0", 8000000, 25, retries = (15, 15), channel = 76, dynamicPayloads = True, autoAck = True)
+# 8000000
+radio = pyRF24("/dev/spidev0.0", 9600, 25, retries = (15, 15), channel = 76, dynamicPayloads = True, autoAck = True)
 radio.setDataRate(2)
 pipes = [0xF0F0F0F0E1, 0xF0F0F0F0E2]
 radio.openWritingPipe(pipes[0])
@@ -107,11 +108,8 @@ while True:
 					print("	| Change with device status: %s" % Status)
 					last_status['%i' % node] = Status
 					changed = True
-			cur.close()
-			db.close()
 			if changed == True:
 				send()
-				time.sleep(0.25)
 				timeout = False
 				print("	| Sending " + str(node) + str(last_threshold["%i" % node][hour]) + str(last_status["%i" % node]) + "...", end="")
 				started_waiting_at = time.time()
@@ -129,6 +127,5 @@ while True:
 				ws.append_row([time.strftime("%Y-%m-%d %H:%M:%S"), node_temp["0"], node_temp["1"], node_temp["2"], ext_temp()])
 			except:
 				pass
-	#			print("Insert into GS failed")
 		cur.close()
 		db.close()
