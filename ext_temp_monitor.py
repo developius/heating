@@ -34,6 +34,7 @@ while True:
 
 	if connection['sql']:
 		hour = datetime.datetime.now().hour
+		print("Hour: %i" % hour)
 		try:
 			temp = ext_temp()
 			print("Temp: %s" % temp)
