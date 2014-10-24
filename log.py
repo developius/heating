@@ -35,8 +35,11 @@ while True:
 			cur.execute("SELECT `Temperature` FROM `node_data` WHERE `Node`=%i" % node);
 			for Temperature in cur:
 				temp = Temperature[0]
-			print(temp,ext_temp())
-			cur.execute("INSERT INTO `log` (`Ext_Temp`,`Node0`) VALUES (%.2f, %.2f);" % (temp,ext_temp()))
+			try:
+				print(temp,ext_temp())
+				cur.execute("INSERT INTO `log` (`Ext_Temp`,`Node0`) VALUES (%.2f, %.2f);" % (temp,ext_temp()))
+			except: print("Failed to get ext temp")
 		cur.close()
 		db.close()
 	time.sleep(30*60)
+
