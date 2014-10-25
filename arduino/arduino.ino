@@ -93,5 +93,5 @@ void loop(void){
     relay_status = LOW;
   }
   digitalWrite(relay, relay_status);
-  delay(250);
+  delay(50);
 }
