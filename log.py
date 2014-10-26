@@ -9,13 +9,6 @@ for line in open("credentials.txt", "r"):
 	credentials.append(line.split("\n")[0])
 connection = {"sql":False,"gs":False}
 
-try:
-	db = mysql.connector.connect(user=credentials[1], password=credentials[2], host=credentials[0], database=credentials[3], autocommit = True)
-	db.ping(True)
-	cur = db.cursor()
-	connection['sql'] = True
-except: connection['sql'] = False; print("Connection to mysql failed")
-
 def ext_temp():
 	req = request.urlopen('http://api.openweathermap.org/data/2.5/find?q=laxfield&units=metric')
 	encoding = req.headers.get_content_charset()
@@ -24,6 +17,11 @@ def ext_temp():
 
 nodes=[0]
 while True:
+	try:
+		db = mysql.connector.connect(user=credentials[1], password=credentials[2], host=credentials[0], database=credentials[3], autocommit = True)
+		cur = db.cursor()
+		connection['sql'] = True
+	except: connection['sql'] = False; print("Connection to mysql failed")
 	if connection['sql']:
 		for node in nodes:
 			cur.execute("SELECT `Temperature` FROM `node_data` WHERE `Node`=%i" % node);

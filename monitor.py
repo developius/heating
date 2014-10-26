@@ -16,18 +16,6 @@ pipes = [0xF0F0F0F0E1, 0xF0F0F0F0E2]
 radio.openWritingPipe(pipes[0])
 radio.openReadingPipe(1, pipes[1])
 
-try:
-	db = mysql.connector.connect(user=credentials[1], password=credentials[2], host=credentials[0], database=credentials[3], autocommit = True)
-	db.ping(True)
-	cur = db.cursor()
-	connection['sql'] = True
-except: connection['sql'] = False; print("Connection to mysql failed")
-try:
-	gc = gspread.login(credentials[4], credentials[5])
-	ws = gc.open("Heating Data").sheet1
-	connection['gs'] = True
-except: connection['gs'] = False; print("Connection to google spreadsheet failed")
-
 last_threshold = {}
 last_status = {}
 node_temp = {}
@@ -56,6 +44,16 @@ def send():
 	time.sleep(0.25)
 
 while True:
+	try:
+		db = mysql.connector.connect(user=credentials[1], password=credentials[2], host=credentials[0], database=credentials[3], autocommit = True)
+		cur = db.cursor()
+		connection['sql'] = True
+	except: connection['sql'] = False; print("Connection to mysql failed")
+	try:
+		gc = gspread.login(credentials[4], credentials[5])
+		ws = gc.open("Heating Data").sheet1
+		connection['gs'] = True
+	except: connection['gs'] = False; print("Connection to google spreadsheet failed")
 	if connection['sql']:
 		for node in nodes:
 			changed = False
