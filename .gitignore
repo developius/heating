@@ -2,3 +2,4 @@ credentials.txt
 *.pyc
 __pycache__/
 *.log
+setup
